@@ -1,0 +1,13 @@
+.env
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+sample_data/
+sample_seed.py
+seed_bulk.py
+PROBLEM_STATEMENT.docx
+openapi.yaml
+DATA_MODEL.md
+tests/
+pytest.ini"*.log" 
