@@ -1,52 +1,33 @@
 # Employee Attendance & Analytics API
 
-FastAPI + PyMongo service for the HROne engineering assignment.
+FastAPI + PyMongo service for the HROne engineering assignment. All application code is in `app/main.py`.
 
 ## Requirements
 
 - Python 3.11+
-- MongoDB 6.0+ (local Docker or Atlas free tier M0)
+- MongoDB 6.0+ (local Docker or Atlas free tier)
 
-## Setup and run
+## Run
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Set environment variables (copy and edit the example, or export directly)
-#    MONGO_URI  – connection string, e.g. mongodb://localhost:27017
-#    MONGO_DB   – database name, e.g. attendance_db
-cp .env.example .env   # edit MONGO_URI and MONGO_DB
+export MONGO_URI="mongodb://localhost:27017"
+export MONGO_DB="attendance_db"
 
-# 3. (Optional) seed the nine sample documents
-python sample_seed.py
-
-# 4. Start the server
 uvicorn app.main:app --port 8000
 ```
 
-The app is ready when `GET /health` returns `{"status": "ok"}`. All indexes are created automatically at startup — no manual steps required.
+`GET /health` returns `{"status": "ok"}` once MongoDB answers. Interactive docs are at `/docs`.
 
 ## Notes
 
-- All application code is in `app/main.py`.
-- Indexes are created idempotently at startup via the `lifespan` hook; `/health` retries index creation on every call until MongoDB is reachable.
-- `MONGO_URI` and `MONGO_DB` are read from environment variables; a local `.env` file is supported via `python-dotenv`, but real environment variables always take priority.
-- The grader injects its own `MONGO_URI` and `MONGO_DB` values and seeds the hidden dataset directly into MongoDB before starting the app.
+- `MONGO_URI` and `MONGO_DB` come from environment variables. A local `.env` is also read (python-dotenv), but real environment variables take priority. Nothing is hard-coded except a localhost default.
+- Indexes are created idempotently at startup. If MongoDB is down at that moment, `/health` retries until the indexes exist.
+- Instants are stored as BSON datetimes (UTC) and converted to epoch milliseconds at the API boundary. The client is `tz_aware`.
+- Analytics use MongoDB aggregation pipelines. Half-up rounding for averages and rates is done on exact decimal values, not floats.
 
-## What is implemented
+## Endpoints implemented
 
-| Endpoint | Status |
-|---|---|
-| `GET /health` | ✅ |
-| `POST /employees` | ✅ |
-| `GET /employees` | ✅ |
-| `POST /attendance/punch-in` | ✅ |
-| `POST /attendance/punch-out` | ✅ |
-| `GET /attendance` | ✅ |
-| `PATCH /attendance/{emp_code}/{date}` | ✅ |
-| `GET /analytics/employees/{emp_code}/monthly` | ✅ |
-| `GET /analytics/departments/summary` | ✅ |
-| `GET /analytics/leaderboard/late` | ✅ |
-| `GET /analytics/departments/{department}/trend` | ✅ |
-| `GET /admin/explain/{endpoint}` | ✅ |
+`/health`, `POST/GET /employees`, `POST /attendance/punch-in`, `POST /attendance/punch-out`, `GET /attendance`, `PATCH /attendance/{emp_code}/{date}`, the four `/analytics/...` endpoints and `/admin/explain/{endpoint}`.
+
